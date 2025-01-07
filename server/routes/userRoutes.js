@@ -113,4 +113,78 @@ router.get('/posts', verifyToken, async (req, res) => {
   }
 });
 
+// Update a post
+router.put('/posts/:id', verifyToken, async (req, res) => {
+  const { title, content } = req.body;
+
+  try {
+    // Validate input
+    if (!title && !content) {
+      return res.status(400).json({ message: 'Title or content is required to update' });
+    }
+
+    // Find the post by ID and verify ownership
+    const post = await Post.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found or unauthorized' });
+    }
+
+    // Update the post fields
+    if (title) post.title = title;
+    if (content) post.content = content;
+
+    const updatedPost = await post.save();
+    res.status(200).json({ message: 'Post updated successfully', post: updatedPost });
+  } catch (error) {
+    console.error('Error updating post:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+// Update a post
+router.put('/posts/:id', verifyToken, async (req, res) => {
+  const { title, content } = req.body;
+
+  try {
+    // Validate input
+    if (!title && !content) {
+      return res.status(400).json({ message: 'Title or content is required to update' });
+    }
+
+    // Find the post by ID and verify ownership
+    const post = await Post.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found or unauthorized' });
+    }
+
+    // Update the post fields
+    if (title) post.title = title;
+    if (content) post.content = content;
+
+    const updatedPost = await post.save();
+    res.status(200).json({ message: 'Post updated successfully', post: updatedPost });
+  } catch (error) {
+    console.error('Error updating post:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+// Delete a post
+router.delete('/posts/:id', verifyToken, async (req, res) => {
+  try {
+    // Find the post by ID and verify ownership
+    const post = await Post.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found or unauthorized' });
+    }
+
+    // Delete the post
+    await Post.deleteOne({ _id: req.params.id });
+    res.status(200).json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
 module.exports = router;
