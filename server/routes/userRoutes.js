@@ -3,6 +3,15 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const router = express.Router();
+const verifyToken = require('../middleware/auth');
+const Post = require('../models/post');
+
+router.get('/protected', verifyToken, (req, res) => {
+  res.status(200).json({
+    message: 'Access granted to protected route',
+    user: req.user, // Contains the decoded JWT payload
+  });
+});
 
 // Register route
 router.post('/register', async (req, res) => {
@@ -64,6 +73,42 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Error during login:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+// Create a post
+router.post('/posts', verifyToken, async (req, res) => {
+  const { title, content } = req.body;
+
+  try {
+    // Validate input
+    if (!title || !content) {
+      return res.status(400).json({ message: 'Title and content are required' });
+    }
+
+    // Create and save the post
+    const newPost = new Post({
+      userId: req.user.id, // User ID from the JWT token
+      title,
+      content,
+    });
+
+    const savedPost = await newPost.save();
+    res.status(201).json({ message: 'Post created successfully', post: savedPost });
+  } catch (error) {
+    console.error('Error creating post:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+// Get all posts for the logged-in user
+router.get('/posts', verifyToken, async (req, res) => {
+  try {
+    const posts = await Post.find({ userId: req.user.id }); // Fetch posts by user ID
+    res.status(200).json({ posts });
+  } catch (error) {
+    console.error('Error fetching posts:', error);
     res.status(500).json({ message: 'Server error', error });
   }
 });
